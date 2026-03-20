@@ -1,5 +1,7 @@
 __pycache__/
 *.pyc
+target/
+rust/**/target/
 
 # Generated pipeline outputs
 data/
