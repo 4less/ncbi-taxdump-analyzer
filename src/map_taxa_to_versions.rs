@@ -313,7 +313,10 @@ fn has_required_index(index_dir: &Path) -> bool {
 
 fn detect_taxonomy(index_dir: &Path, viable_versions: &[String]) -> String {
     if !viable_versions.is_empty() {
-        if viable_versions.iter().all(|v| v.starts_with("gtdb-r")) {
+        if viable_versions
+            .iter()
+            .all(|v| v.starts_with("gtdb-r") || v.starts_with("g-r"))
+        {
             return "gtdb".to_string();
         }
         if viable_versions
@@ -322,6 +325,8 @@ fn detect_taxonomy(index_dir: &Path, viable_versions: &[String]) -> String {
                 v.starts_with("new_taxdump_")
                     || v.starts_with("taxdump_")
                     || v.starts_with("taxdmp_")
+                    || v.starts_with("n-")
+                    || v.starts_with("t-")
             })
         {
             return "ncbi".to_string();
@@ -450,20 +455,34 @@ fn evaluate_index(
 
     let mut version_cols: Vec<(usize, String)> = Vec::new();
     {
-        let mut rdr = ReaderBuilder::new().delimiter(b'\t').from_path(version_cols_path)?;
+        let mut rdr = ReaderBuilder::new()
+            .delimiter(b'\t')
+            .flexible(true)
+            .from_path(version_cols_path)?;
         let headers = rdr.headers()?.clone();
         let c_i = headers
             .iter()
-            .position(|h| h == "col_idx")
+            .position(|h| h == "col_idx" || h.starts_with("col_idx-"))
             .context("missing col_idx")?;
         let v_i = headers
             .iter()
-            .position(|h| h == "version_id")
+            .position(|h| h == "version_id" || h.starts_with("version_id-"))
             .context("missing version_id")?;
         for rec in rdr.records() {
             let rec = rec?;
-            let idx: usize = rec.get(c_i).unwrap_or_default().parse().unwrap_or(0);
-            let ver = rec.get(v_i).unwrap_or_default().to_string();
+            let Some(idx_raw) = rec.get(c_i).map(str::trim) else {
+                continue;
+            };
+            let Some(ver_raw) = rec.get(v_i).map(str::trim) else {
+                continue;
+            };
+            if idx_raw.is_empty() || ver_raw.is_empty() {
+                continue;
+            }
+            let Ok(idx) = idx_raw.parse::<usize>() else {
+                continue;
+            };
+            let ver = ver_raw.to_string();
             version_cols.push((idx, ver));
         }
     }
