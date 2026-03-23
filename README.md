@@ -24,21 +24,21 @@ Scripts to:
 - `build_presence` (Rust binary)
   - Reads downloaded zip files (`nodes.dmp`, `names.dmp`).
   - Builds compact TSV hash-map indexes using compact version IDs:
-    - `data/index/taxid_versions.tsv`
-    - `data/index/scientific_name_versions.tsv`
-    - `data/index/taxid_scientific_name_versions.tsv`
-    - `data/index/taxid_any_name_versions.tsv`
+    - `~/.taxdet/index/ncbi_index/taxid_matrix.tsv`
+    - `~/.taxdet/index/ncbi_index/scientific_name_matrix.tsv`
+    - `~/.taxdet/index/ncbi_index/taxid_scientific_name_matrix.tsv`
+    - `~/.taxdet/index/ncbi_index/taxid_any_name_matrix.tsv`
   - Version format is compact: `n-yy-mm` (new taxdump) / `t-yy-mm` (taxdmp).
   - Writes `data/manifests/ingestion_manifest.tsv`.
 
 - `build_presence_gtdb` (Rust binary)
   - Reads downloaded GTDB taxonomy files (`gtdb_r*_bac120_taxonomy.tsv(.gz)`, `gtdb_r*_ar53_taxonomy.tsv(.gz)`).
-  - Builds the same matrix index format used by the mapper into `data/gtdb_index`.
+  - Builds the same matrix index format used by the mapper into `~/.taxdet/index/gtdb_index`.
   - Uses compact GTDB version IDs: `g-r###` (for example `g-r226`).
   - GTDB rank-prefixed names are indexed with and without prefix (for example `d__`, `p__`, `c__`, `o__`, `f__`, `g__`, `s__`), so both query forms match.
   - Writes `data/manifests/gtdb_ingestion_manifest.tsv`.
 
-- `map_taxa_to_versions` (Rust binary)
+- `taxdet` (Rust binary)
   - Reads the compact index TSVs and resolves:
     - tax IDs only
     - names only (`name_txt`)
@@ -61,6 +61,12 @@ Scripts to:
   - End-to-end wrapper for GTDB fetch -> GTDB Rust compact index build.
 
 ## Quick start
+
+Install `taxdet`:
+
+```bash
+cargo install --path . --bin taxdet
+```
 
 Run full pipeline:
 
@@ -86,7 +92,7 @@ Step-by-step:
 python3 scripts/fetch_taxdump_archives.py --skip-existing
 cargo run --release --manifest-path Cargo.toml --bin build_presence -- \
   --archives-dir data/archives \
-  --index-dir data/index \
+  --index-dir "$HOME/.taxdet/index/ncbi_index" \
   --manifest-out data/manifests/ingestion_manifest.tsv
 ```
 
@@ -102,7 +108,7 @@ GTDB step-by-step:
 python3 scripts/fetch_gtdb_taxonomy.py --skip-existing
 cargo run --release --manifest-path Cargo.toml --bin build_presence_gtdb -- \
   --taxonomy-dir data/gtdb \
-  --index-dir data/gtdb_index \
+  --index-dir "$HOME/.taxdet/index/gtdb_index" \
   --manifest-out data/manifests/gtdb_ingestion_manifest.tsv
 ```
 
@@ -149,8 +155,8 @@ d__Bacteria;p__Bacillota_A;c__Clostridia;o__Tissierellales;f__Peptoniphilaceae;g
 Run mapping:
 
 ```bash
-cargo run --release --manifest-path Cargo.toml --bin map_taxa_to_versions -- \
-  --index-dir data/index \
+cargo run --release --manifest-path Cargo.toml --bin taxdet -- \
+  --index-dir "$HOME/.taxdet/index/ncbi_index" \
   --tax-ids input/tax_ids.txt \
   --names input/names.txt \
   --tax-name-pairs input/tax_name_pairs.tsv \
@@ -159,7 +165,7 @@ cargo run --release --manifest-path Cargo.toml --bin map_taxa_to_versions -- \
 
 If `--index-dir` is omitted, mapper uses:
 - `TAXON_INDEX_DIRS` (comma/colon/semicolon-separated), or
-- `NCBI_INDEX_DIR` and `GTDB_INDEX_DIR` (defaults: `data/index`, `data/gtdb_index`).
+- `NCBI_INDEX_DIR` and `GTDB_INDEX_DIR` (defaults: `~/.taxdet/index/ncbi_index`, `~/.taxdet/index/gtdb_index`).
 
 Allow synonym fallback when there is no scientific-name match:
 

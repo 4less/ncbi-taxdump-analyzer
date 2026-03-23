@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use glob::glob;
 use std::collections::{HashMap, HashSet};
+use std::env;
 use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::io::Read;
@@ -26,8 +27,8 @@ struct Args {
     #[arg(long, default_value = "*_*.zip")]
     archives_glob: String,
 
-    #[arg(long, default_value = "data/index")]
-    index_dir: PathBuf,
+    #[arg(long)]
+    index_dir: Option<PathBuf>,
 
     #[arg(long, default_value = "data/manifests/ingestion_manifest.tsv")]
     manifest_out: PathBuf,
@@ -357,16 +358,26 @@ fn write_pair_matrix(
     Ok(())
 }
 
+fn default_taxdet_home() -> PathBuf {
+    env::var("TAXDET_HOME")
+        .map(PathBuf::from)
+        .or_else(|_| env::var("HOME").map(|h| PathBuf::from(h).join(".taxdet")))
+        .unwrap_or_else(|_| PathBuf::from(".taxdet"))
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
+    let index_dir = args
+        .index_dir
+        .clone()
+        .unwrap_or_else(|| default_taxdet_home().join("index").join("ncbi_index"));
     let archives = collect_archives(&args)?;
     let mut roots: HashSet<u32> = args.root_taxids.iter().copied().collect();
     if matches!(args.taxon_scope, TaxonScope::Bacteria) {
         roots.insert(2);
     }
 
-    fs::create_dir_all(&args.index_dir)
-        .with_context(|| format!("create {}", args.index_dir.display()))?;
+    fs::create_dir_all(&index_dir).with_context(|| format!("create {}", index_dir.display()))?;
 
     let mut name_pool: HashSet<Arc<str>> = HashSet::new();
 
@@ -547,11 +558,11 @@ fn main() -> Result<()> {
         .collect();
     let chunk_count = version_cols.len().div_ceil(64);
 
-    let version_cols_path = args.index_dir.join("version_columns.tsv");
-    let taxid_matrix_path = args.index_dir.join("taxid_matrix.tsv");
-    let sci_name_matrix_path = args.index_dir.join("scientific_name_matrix.tsv");
-    let taxid_sci_matrix_path = args.index_dir.join("taxid_scientific_name_matrix.tsv");
-    let taxid_any_matrix_path = args.index_dir.join("taxid_any_name_matrix.tsv");
+    let version_cols_path = index_dir.join("version_columns.tsv");
+    let taxid_matrix_path = index_dir.join("taxid_matrix.tsv");
+    let sci_name_matrix_path = index_dir.join("scientific_name_matrix.tsv");
+    let taxid_sci_matrix_path = index_dir.join("taxid_scientific_name_matrix.tsv");
+    let taxid_any_matrix_path = index_dir.join("taxid_any_name_matrix.tsv");
 
     write_version_columns(&version_cols_path, &version_cols)?;
     write_taxid_matrix(

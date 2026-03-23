@@ -2,6 +2,7 @@
 name = "taxdump-ingest"
 version = "0.1.0"
 edition = "2021"
+default-run = "taxdet"
 
 [[bin]]
 name = "build_presence"
@@ -16,7 +17,7 @@ flate2 = "1"
 zip = { version = "2", default-features = false, features = ["deflate"] }
 
 [[bin]]
-name = "map_taxa_to_versions"
+name = "taxdet"
 path = "src/map_taxa_to_versions.rs"
 
 [[bin]]

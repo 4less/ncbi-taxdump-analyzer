@@ -335,7 +335,7 @@ fn detect_taxonomy(index_dir: &Path, viable_versions: &[String]) -> String {
     let d = index_dir.to_string_lossy().to_lowercase();
     if d.contains("gtdb") {
         "gtdb".to_string()
-    } else if d.contains("ncbi") || d.ends_with("/index") || d == "data/index" {
+    } else if d.contains("ncbi") || d.ends_with("/ncbi_index") || d == ".taxdet/index/ncbi_index" {
         "ncbi".to_string()
     } else {
         "unknown".to_string()
@@ -355,9 +355,21 @@ fn default_index_dirs() -> Vec<PathBuf> {
         }
     }
 
-    let ncbi = env::var("NCBI_INDEX_DIR").unwrap_or_else(|_| "data/index".to_string());
-    let gtdb = env::var("GTDB_INDEX_DIR").unwrap_or_else(|_| "data/gtdb_index".to_string());
-    vec![PathBuf::from(ncbi), PathBuf::from(gtdb)]
+    let default_root = env::var("TAXDET_HOME")
+        .map(PathBuf::from)
+        .or_else(|_| env::var("HOME").map(|h| PathBuf::from(h).join(".taxdet")))
+        .unwrap_or_else(|_| PathBuf::from(".taxdet"));
+
+    let default_ncbi = default_root.join("index").join("ncbi_index");
+    let default_gtdb = default_root.join("index").join("gtdb_index");
+
+    let ncbi = env::var("NCBI_INDEX_DIR")
+        .map(PathBuf::from)
+        .unwrap_or(default_ncbi);
+    let gtdb = env::var("GTDB_INDEX_DIR")
+        .map(PathBuf::from)
+        .unwrap_or(default_gtdb);
+    vec![ncbi, gtdb]
 }
 
 fn unique_paths(paths: Vec<PathBuf>) -> Vec<PathBuf> {

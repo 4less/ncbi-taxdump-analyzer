@@ -150,7 +150,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Build taxon presence TSVs across taxdump versions")
     parser.add_argument("--archives-dir", default="data/archives", help="Directory containing *.zip archives")
     parser.add_argument("--archives-glob", default="*_*.zip", help="Glob pattern to select archives")
-    parser.add_argument("--index-dir", default="data/index", help="Output directory for TSV index tables")
+    parser.add_argument(
+        "--index-dir",
+        default=str(Path.home() / ".taxdet" / "index" / "ncbi_index"),
+        help="Output directory for TSV index tables",
+    )
     parser.add_argument(
         "--manifest-out",
         default="data/manifests/ingestion_manifest.tsv",

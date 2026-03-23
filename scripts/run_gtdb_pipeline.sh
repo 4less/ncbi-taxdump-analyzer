@@ -2,7 +2,7 @@
 set -euo pipefail
 
 OUT_DIR="${GTDB_OUT_DIR:-data/gtdb}"
-INDEX_DIR="${GTDB_INDEX_DIR:-data/gtdb_index}"
+INDEX_DIR="${GTDB_INDEX_DIR:-$HOME/.taxdet/index/gtdb_index}"
 MANIFEST_FETCH="${GTDB_FETCH_MANIFEST:-data/manifests/gtdb_taxonomy_manifest.tsv}"
 MANIFEST_INGEST="${GTDB_INGEST_MANIFEST:-data/manifests/gtdb_ingestion_manifest.tsv}"
 MAX_RELEASES="${GTDB_MAX_RELEASES:-}"

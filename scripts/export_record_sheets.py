@@ -177,7 +177,11 @@ def write_taxon_name_version_index(sorted_name_by_key_path: Path, out_path: Path
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Export taxdump record-sheet TSVs")
-    parser.add_argument("--index-dir", default="data/index", help="Input directory with presence TSVs")
+    parser.add_argument(
+        "--index-dir",
+        default=str(Path.home() / ".taxdet" / "index" / "ncbi_index"),
+        help="Input directory with presence TSVs",
+    )
     parser.add_argument("--out-dir", default="data/record_sheets", help="Output directory for TSV sheets")
     args = parser.parse_args()
 

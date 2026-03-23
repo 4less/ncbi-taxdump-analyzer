@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ARCHIVE_DIR=${ARCHIVE_DIR:-data/archives}
-INDEX_DIR=${INDEX_DIR:-data/index}
+INDEX_DIR=${INDEX_DIR:-"$HOME/.taxdet/index/ncbi_index"}
 RUST_MANIFEST=${RUST_MANIFEST:-Cargo.toml}
 INGEST_WORKERS=${INGEST_WORKERS:-}
 INGEST_LIMIT=${INGEST_LIMIT:-}
