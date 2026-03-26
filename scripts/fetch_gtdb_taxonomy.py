@@ -192,7 +192,13 @@ def main() -> int:
             )
             continue
 
-        for grp in ("bac120", "ar53"):
+        # Archaea marker set changed from ar122 (r89–r202) to ar53 (r207+).
+        # Try ar53 first; fall back to ar122 for older releases.
+        archaea_stem = "ar53"
+        if choose_taxonomy_name(sub_hrefs, "ar53") is None and choose_taxonomy_name(sub_hrefs, "ar122") is not None:
+            archaea_stem = "ar122"
+
+        for grp in ("bac120", archaea_stem):
             src_name = choose_taxonomy_name(sub_hrefs, grp)
             if not src_name:
                 rows.append(
